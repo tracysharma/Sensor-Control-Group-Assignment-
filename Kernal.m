@@ -14,7 +14,7 @@ while hasdata(ds)
 
     imgresultfinal = ConvolutionKernal(imgGss,kern);
 
-    imshow(imgresult)
+    imshow(imgresultfinal)
 
 
 end
