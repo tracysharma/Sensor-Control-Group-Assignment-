@@ -119,6 +119,8 @@ end
 
 %% Mapping Contours to 3D Space
 
+contours3D = cell(1, length(allContours));  % Initialize contours3D as a cell array
+
 for i = 1:length(allContours)
     contour2D = allContours{i};
     contour2D(:,3) = 0; % Extend to 3D by setting z = 0
@@ -348,7 +350,45 @@ ylabel('Y');
 zlabel('Z');
 view(3);
 
-centroids
+%% Find EM position error or correction required to achieve centre point
 
+% Create an array to store difference between EM position and centre point
+% with rotation considered
+EM_errorWR = zeros(numFilesEM,3);
+
+% EM data saved in allEMs array is saved in a different format to
+% centeriods, loop to rewrite EM data into new array in correct format
+for i = 1:numFilesEM
+    EMdata_pt = allEMs{i}; % Select ith cell in array
+    EMdata_reform3(i,:) = EMdata_pt(1:3); % extract each value in array and save in seperate cell column in new array (3D point only for error w/o rotation)
+    EMdata_reform7(i,:) = EMdata_pt(1:7); % extract each value in array and save in seperate cell column in new array (all data for error with rotation considered)
+end
+   
+% Function to find EM error or correction with rotation considered
+for i = 1:numFilesEM
+    EM_3Dcoor = EMdata_reform7(i,1:3); % Extract 3D coordinates for ith EM point
+    EM_quaternion = EMdata_reform7(i,4:7); % Extract rotation data for ith EM point
+    
+    Rot_matrix = quat2rotm(EM_quaternion); % Convert quaternion to rotation matrix
+    
+    rotated_EMcoor = (Rot_matrix * EM_3Dcoor')'; % Apply rotation to data coordinates
+    
+    % Find error or difference between center point and EM data pt (with rotation considered)
+    variance = centroids(i,:) - rotated_EMcoor; 
+    EM_errorWR(i,:) = variance; % store EM error with rotation considered into array
+   
+end
+ 
+% Calculate EM poistion error or difference from centrepoint WITHOUT
+% rotation
+ EM_error = EMdata_reform3 - centroids;
+ 
+% Display on console for debugging
+ disp('The below dataset is the EM error or correction required to achieve centrepoint WITHOUT rotation considered:');
+ disp(EM_error);
+ disp('The below dataset is the EM error or correction required to achieve centrepoint WITH rotation considered:');
+ disp(EM_errorWR);
+ 
+ 
 
 
