@@ -85,8 +85,10 @@ for i = 1:numImgs
     centerPt_y = (y_max + y_min) / 2;
     
     % Save centre point in array
-    
     centrePoints(i,:) = [centerPt_x,centerPt_y];
+    
+    % Print result to console
+    fprintf('Image %d.jpg Centrepoint found! Coordinates X: %d Y: %d\n',(i-1), centerPt_x, centerPt_y);
 
 %     % Show processed image, with SURF detection points and centre point
 %     imshow(bwImg); % Show BW image
@@ -96,5 +98,67 @@ for i = 1:numImgs
 %     plot(centerPt_x, centerPt_y, 'ro', 'MarkerSize', 10,'MarkerEdgeColor', 'red', 'MarkerFaceColor', 'red', 'LineWidth', 2); % Plot centre point as red dot
 %     hold off;
     
+end
+
+  % Show processed image, with SURF detection points and centre point
+    imshow(imagesProcessed{i}); % Show BW image
+    hold on
+    plot(points); % Show SURF feature points
+    hold on
+    plot(centerPt_x, centerPt_y, 'ro', 'MarkerSize', 10,'MarkerEdgeColor', 'red', 'MarkerFaceColor', 'red', 'LineWidth', 2); % Plot centre point as red dot
+    hold off;
+
+
+%% Load EM data into matlab workspace
+ 
+folderPathEM = 'Data2_Soft_pullback_1/EM/';
+filesEM = dir(fullfile(folderPathEM, '*.txt'));  % Assuming .txt format for contours
+ 
+numFilesEM = length(filesEM); % find total number of EM files for loop to read all files in
+% numFilesEM = 100;
+allEMs = cell(1, numFilesEM);  % Pre-allocate for efficiency
+
+% For loop to read all EM data files into allEMs array 
+for k = 1:numFilesEM
+    filePathEM = fullfile(folderPathEM, filesEM(k).name);
+    allEMs{k} = load(filePathEM);
+end
+ 
+%% Mapping Ultrasound Centrepoints to 3D Space
+
+% For loop to read through each centre point and trasnfomr to the global
+% reference frame - mapping to the 3D space
+for i = 1:length(allEMs)
+ 
+    centrePoint2D = centrePoints(i); % extract ith point
+    centrePoint2D(:,3) = 0; % Extend to 3D by setting z = 0
+    
+    % Extract EM data for this contour
+    emPose = allEMs{i}; % Extract ith pose in allEMs array
+    translation = emPose(:,1:3); % Extract 3d point data, translation of EM data
+    quaternion = emPose(:,4:7); % Extract rotation data, quaterionion
+    
+    % Convert quaternion to rotation matrix
+    R = quat2rotm(quaternion); % Convert quaternion to rotation matrix using Matlab function
+    
+    % Convert quaternion to rotation matrix manually
+%     qw = quaternion(1);
+%     qx = quaternion(2);
+%     qy = quaternion(3);
+%     qz = quaternion(4);
+%     R = [1 - 2*(qy^2 + qz^2),  2*(qx*qy - qz*qw),      2*(qx*qz + qy*qw);
+%          2*(qx*qy + qz*qw),      1 - 2*(qx^2 + qz^2),  2*(qy*qz - qx*qw);
+%          2*(qx*qz - qy*qw),      2*(qy*qz + qx*qw),      1 - 2*(qx^2 + qy^2)];
+    
+    % Transform each point in the contour
+    point2d = centrePoint2D(1,:).';
+    point3d = R * point2d+translation.';  % Apply rotation to data coordinates and add translation
+    centrePoint3D=point3d.';
+ 
+    centrePoints3D{i}=centrePoint3D; % Save in centrePoints3D array
+    
+    % Print result to console
+    fprintf('Centrepoint (Local frame) u: %d v: %d. New Centrepoint (Global Frame) X: %d Y: %d Z: %d\n', centrePoint2D(1:1), centrePoint2D(1:2),centrePoint3D(1:1),centrePoint3D(1:2),centrePoint3D(1:3));
+ 
 end
 
