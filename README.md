@@ -15,3 +15,7 @@ This project has several matlab files and a GUI. Please see below:
 2. Pullback.m - This file uses the pullback EM and contour data to find the centrepoints and shows the error of the cathedar or correction to reach the centreline for path planning.
    Run this file second.
 4. Insersion.m - This file does the same as Pullback.m but for the insertion dataset. Run this file third.
+
+5. Insersion.mlapp - this is the file for Insersion GUI and the excel sheets for this gui need to be in the same path
+6. Pullback.mlapp - this is the file for Insersion GUI and the excel sheets for this gui need to be in the same path. all folders( Em_Error_WR.xlsx, Em_Error.xlsx, Pullback_EMerror (1).xlsx, Pullback_EMerrorWR (2).xlsx) should be in same path
+
